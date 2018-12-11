@@ -1,0 +1,10 @@
+.stack-work/
+app/
+test/
+stack.yaml
+package.yaml
+README.md
+LICENSE
+ChangeLog.md
+Setup.hs
+*~
