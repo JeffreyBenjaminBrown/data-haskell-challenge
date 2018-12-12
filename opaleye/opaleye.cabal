@@ -15,7 +15,7 @@ author:         Author name here
 maintainer:     example@example.com
 copyright:      2018 Author name here
 license:        BSD3
-license-file:   LICENSE
+--license-file:   LICENSE
 build-type:     Simple
 --extra-source-files:
 --    README.md
