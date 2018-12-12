@@ -4,32 +4,32 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b5a7d977cf203dd3a3e83c4f4e2c95dd8f27a99ded4c3bcc7e2417b14bbe7af5
+-- hash: 5ac8dd5ca4777a47cff7e9852c6f077003379922c1df40316c75225e5b7bf514
 
-name:           opaleye
+name:           via-opaleye
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/githubuser/opaleye#readme>
-homepage:       https://github.com/githubuser/opaleye#readme
-bug-reports:    https://github.com/githubuser/opaleye/issues
+description:    Please see the README on GitHub at <https://github.com/githubuser/via-opaleye#readme>
+homepage:       https://github.com/githubuser/via-opaleye#readme
+bug-reports:    https://github.com/githubuser/via-opaleye/issues
 author:         Author name here
 maintainer:     example@example.com
 copyright:      2018 Author name here
 license:        BSD3
---license-file:   LICENSE
+license-file:   LICENSE
 build-type:     Simple
---extra-source-files:
---    README.md
---    ChangeLog.md
+extra-source-files:
+    README.md
+    ChangeLog.md
 
 source-repository head
   type: git
-  location: https://github.com/githubuser/opaleye
+  location: https://github.com/githubuser/via-opaleye
 
 library
   exposed-modules:
       Lib
   other-modules:
-      Paths_opaleye
+      Paths_via_opaleye
   hs-source-dirs:
       src
   build-depends:
@@ -39,28 +39,27 @@ library
               , profunctors
   default-language: Haskell2010
 
--- executable opaleye-exe
+-- executable via-opaleye-exe
 --   main-is: Main.hs
 --   other-modules:
---       Paths_opaleye
+--       Paths_via_opaleye
 --   hs-source-dirs:
 --       app
 --   ghc-options: -threaded -rtsopts -with-rtsopts=-N
 --   build-depends:
 --       base >=4.7 && <5
---     , opaleye
+--     , via-opaleye
 --   default-language: Haskell2010
 -- 
--- test-suite opaleye-test
+-- test-suite via-opaleye-test
 --   type: exitcode-stdio-1.0
 --   main-is: Spec.hs
 --   other-modules:
---       Paths_opaleye
+--       Paths_via_opaleye
 --   hs-source-dirs:
 --       test
 --   ghc-options: -threaded -rtsopts -with-rtsopts=-N
 --   build-depends:
 --       base >=4.7 && <5
---     , opaleye
+--     , via-opaleye
 --   default-language: Haskell2010
--- 

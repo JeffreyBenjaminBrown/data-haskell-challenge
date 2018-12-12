@@ -34,10 +34,12 @@ resolver: lts-12.22
 #  - wai
 packages:
 - .
+
 # Dependency packages to be pulled from upstream that are not in the resolver
 # using the same syntax as the packages field.
 # (e.g., acme-missiles-0.3)
-# extra-deps: []
+extra-deps: 
+- opaleye-0.6.7003.1@sha256:914ac99c6f7ceea050df843ac31c33be0f6340bc0f05753c8fdfc18074fa9e5b
 
 # Override default flag values for local packages and extra-deps
 # flags: {}
