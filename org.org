@@ -1,0 +1,11 @@
+* references
+** the Reddit thread
+https://www.reddit.com/r/haskell/comments/a50xpr/datahaskell_solve_this_small_problem_to_fill_some/
+** this repo's issues
+https://github.com/JeffreyBenjaminBrown/data-haskell-challenge/issues
+** gagandeep's frames-based solution
+https://github.com/gagandeepb/frames-explore/blob/master/src/Lib.hs
+* solutions yet to incorporate
+** gelisam's
+https://gist.github.com/gelisam/ba755361fdb34c952776e79b8bf02602
+https://www.reddit.com/r/haskell/comments/a50xpr/datahaskell_solve_this_small_problem_to_fill_some/
