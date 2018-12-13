@@ -5,6 +5,22 @@ https://www.reddit.com/r/haskell/comments/a50xpr/datahaskell_solve_this_small_pr
 https://github.com/JeffreyBenjaminBrown/data-haskell-challenge/issues
 ** gagandeep's frames-based solution
 https://github.com/gagandeepb/frames-explore/blob/master/src/Lib.hs
+* where each project ended
+** via-opaleye: got an error, waiting for response
+https://www.reddit.com/r/haskell/comments/a50xpr/datahaskell_solve_this_small_problem_to_fill_some/ebnrdee/
+*** The author probably saw my response?
+I only posted it on Reddit but he responsed to one Reddit response already.
+** frames by gagandeep: got an error, waiting for a response
+https://github.com/gagandeepb/frames-explore/issues
+*** I used these channels to inform the author
+the Reddit thread
+gitter / datahaskell
+the issue I posted
+** siphon|cassava solution by chessai: got an error, waiting for a response
+https://gist.github.com/chessai/e5a04ddcbc6c6708333e187ee8ae41a3
+*** I used these channels to inform the author
+the issue I posted
+email
 * solutions yet to incorporate
 ** gelisam's
 https://gist.github.com/gelisam/ba755361fdb34c952776e79b8bf02602

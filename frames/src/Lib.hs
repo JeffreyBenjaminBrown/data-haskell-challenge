@@ -25,8 +25,8 @@ import           Pipes                 hiding (Proxy)
 import qualified Pipes.Prelude         as P
 
 
-tableTypes "Prices" "../prices.csv"
-tableTypes "Purchases" "../purchases.csv"
+tableTypes "Prices" "data/prices.csv"
+tableTypes "Purchases" "data/purchases.csv"
 
 pricesStream :: MonadSafe m => Producer Prices m ()
 pricesStream = readTableOpt pricesParser "data/prices.csv"
