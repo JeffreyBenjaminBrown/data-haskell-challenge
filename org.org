@@ -9,3 +9,4 @@ https://github.com/gagandeepb/frames-explore/blob/master/src/Lib.hs
 ** gelisam's
 https://gist.github.com/gelisam/ba755361fdb34c952776e79b8bf02602
 https://www.reddit.com/r/haskell/comments/a50xpr/datahaskell_solve_this_small_problem_to_fill_some/
+* TODO tell Git about the .cabal and .yaml files in rindenmulch/

@@ -1,7 +1,3 @@
-DataHaskell: Solve this small problem to fill a big gap in the documentation.
----
-
-
 # Why
 
 I've been a data (specifically economics) programmer for maybe a decade. The vast majority of the work occupies, honestly, a small problem space.
@@ -58,6 +54,14 @@ One way to compute that would be to:
     Keep the last row with a date no greater than 6; drop all others.
   Across groups, compute the mean of accumulated spending.
 ```
+
+
+# References
+
+So far all solutions come from [this Reddit post](https://www.reddit.com/r/haskell/comments/a50xpr/datahaskell_solve_this_small_problem_to_fill_some/).
+
+More granular references can be found in [the org doc](org.org).
+
 
 # Footnotes
 
