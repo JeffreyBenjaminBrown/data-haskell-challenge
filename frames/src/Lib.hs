@@ -25,7 +25,7 @@ import           Pipes                 hiding (Proxy)
 import qualified Pipes.Prelude         as P
 
 
-tableTypes "Prices" "data/prices.csv"
+tableTypes "Prices"    "data/prices.csv"
 tableTypes "Purchases" "data/purchases.csv"
 
 pricesStream :: MonadSafe m => Producer Prices m ()
@@ -42,34 +42,31 @@ loadPurchases = inCoreAoS purchasesStream
 
 -- Delete any purchase of legal fees.
 loadFilteredPurchase :: IO (Frame Purchases)
-loadFilteredPurchase =
-  inCoreAoS $
-    purchasesStream
-    >-> P.filter (\p -> rget @Item p /= Field "legal fees (1 hour)")
+loadFilteredPurchase = inCoreAoS $ purchasesStream >-> P.filter f
+  where f p = rget @Item p /= Field "legal fees (1 hour)"
 
 -- Merge price and purchase data.
 joinPricePurchase = do
   price <- loadPrices
   fpurchase <- loadFilteredPurchase
   return $ innerJoin @'[Item] price fpurchase
+-- TODO ? Shouldn't this work the same? But it changes the value of meanAcrossGroups.
+-- joinPricePurchase = innerJoin @'[Item] <$> loadPrices <*> loadPurchases
 
 type MoneySpent = "money-spent" :-> Int
 
-emptyColumn :: Int -> [Record '[MoneySpent]]
-emptyColumn nrows =
-  replicate nrows (0 &: RNil)
+zeroSpentColumn :: Int -> [Record '[MoneySpent]]
+zeroSpentColumn nrows = replicate nrows $ 0 &: RNil
 
 -- Compute a new column, "money-spent" = units-bought price.
 addNewColumn = do
   joined <- joinPricePurchase
   let nrows = F.length joined
-  let zipped = zipFrames joined (toFrame $ emptyColumn nrows)
-  return $
-    fmap (\r ->
-            rput (Field @"money-spent" $
-                    mult (rget @UnitsBought r) (rget @Price r)
-                  ) r
-          ) zipped
+      zipped = zipFrames joined $ toFrame $ zeroSpentColumn nrows
+      f r = rput field r where
+        field = Field @"money-spent"
+                $ mult (rget @UnitsBought r) (rget @Price r)
+  return $ fmap f zipped
 
 mult :: Num t => ElField '(s1, t) -> ElField '(s2, t) -> t
 mult (Field x) (Field y) = (x*y)

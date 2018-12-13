@@ -1,3 +1,31 @@
+* notes
+** Vinyl
+*** column order matters
+as types, Record '[X,Y] /= [Record '[Y,X]]
+* questions
+** about Vinyl
+*** can sum types be expressed more briefly?
+**** example problem
+> :t joinPricePurchase
+joinPricePurchase
+  :: IO
+       (Frame
+          (Record
+             '['("item", Text), '("price", Int), '("date", Int),
+               '("person", Text), UnitsBought]))
+> :i Purchases 
+type Purchases = Record '[Date, Person, Item, UnitsBought]
+        -- Defined at /home/jeff/data-haskell/challenge/frames/src/Lib.hs:29:1
+> :i Price
+type Price =
+  "price" :-> Int :: (ghc-prim-0.5.2.0:GHC.Types.Symbol, *)
+        -- Defined at /home/jeff/data-haskell/challenge/frames/src/Lib.hs:28:1
+**** TODO try something from Data.Vinyl.TypeLevel.++
+> :i zipFrames 
+zipFrames ::
+  FrameRec rs
+  -> FrameRec rs' -> FrameRec (rs Data.Vinyl.TypeLevel.++ rs')
+        -- Defined in ‘Frames.Frame’
 * references
 ** the Reddit thread
 https://www.reddit.com/r/haskell/comments/a50xpr/datahaskell_solve_this_small_problem_to_fill_some/
