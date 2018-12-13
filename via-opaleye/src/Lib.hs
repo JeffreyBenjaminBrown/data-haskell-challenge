@@ -64,3 +64,38 @@ sql :: IO ()
 sql = case showSql query of
   Nothing -> return ()
   Just s  -> putStrLn s
+
+
+-- | = Generated code.  Will disappear in a future release of Opaleye.
+
+pPurchase :: PP.ProductProfunctor p
+         => Purchase (p :<$> a :<*> b)
+         -> p (Purchase a) (Purchase b)
+pPurchase (Purchase a b c d) = Purchase PP.***$ P.lmap pDate a
+                                        PP.**** P.lmap pName b
+                                        PP.**** P.lmap pItemN c
+                                        PP.**** P.lmap pUnits d
+
+pItem :: PP.ProductProfunctor p
+      => Item (p :<$> a :<*> b)
+      -> p (Item a) (Item b)
+pItem (Item a b) = Item PP.***$ P.lmap iName a
+                        PP.**** P.lmap iPrice b
+
+instance ( PP.ProductProfunctor p
+          , Default p (TableField a Int SqlInt4 NN Req)
+                      (TableField b Int SqlInt4 NN Req)
+          , Default p (TableField a String SqlText NN Req)
+                      (TableField b String SqlText NN Req)
+          , Default p (TableField a Double SqlFloat8 NN Req)
+                      (TableField b Double SqlFloat8 NN Req)) =>
+   Default p (Purchase a) (Purchase b) where
+   def = pPurchase (Purchase D.def D.def D.def D.def)
+
+instance ( PP.ProductProfunctor p
+          , Default p (TableField a String SqlText NN Req)
+                      (TableField b String SqlText NN Req)
+          , Default p (TableField a Double SqlFloat8 NN Req)
+                      (TableField b Double SqlFloat8 NN Req)) =>
+   Default p (Item a) (Item b) where
+   def = pItem (Item D.def D.def)
