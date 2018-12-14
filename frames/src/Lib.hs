@@ -46,12 +46,7 @@ loadFilteredPurchase = inCoreAoS $ purchasesStream >-> P.filter f
   where f p = rget @Item p /= Field "legal fees (1 hour)"
 
 -- Merge price and purchase data.
-joinPricePurchase = do
-  price <- loadPrices
-  fpurchase <- loadFilteredPurchase
-  return $ innerJoin @'[Item] price fpurchase
--- TODO ? Shouldn't this work the same? But it changes the value of meanAcrossGroups.
--- joinPricePurchase = innerJoin @'[Item] <$> loadPrices <*> loadPurchases
+joinPricePurchase = innerJoin @'[Item] <$> loadPrices <*> loadFilteredPurchase
 
 type MoneySpent = "money-spent" :-> Int
 
