@@ -18,6 +18,7 @@ import qualified Data.Foldable         as F
 import qualified Data.List             as DL
 import           Data.Vinyl
 import           Data.Vinyl.Functor
+import           Data.Vinyl.TypeLevel
 import           Frames
 import           Frames.ExtraInstances
 import           Lens.Micro.Extras
@@ -46,6 +47,8 @@ loadFilteredPurchase = inCoreAoS $ purchasesStream >-> P.filter f
   where f p = rget @Item p /= Field "legal fees (1 hour)"
 
 -- Merge price and purchase data.
+joinPricePurchase :: IO (Frame (Record (
+  (RecordColumns Prices ++ RDelete Item (RecordColumns Purchases)))))
 joinPricePurchase = innerJoin @'[Item] <$> loadPrices <*> loadFilteredPurchase
 
 type MoneySpent = "money-spent" :-> Int
