@@ -1,0 +1,2 @@
+* to run the query, Tom suggests Opaleye.RunSelect.runSelect
+https://github.com/JeffreyBenjaminBrown/data-haskell-challenge/issues/1
