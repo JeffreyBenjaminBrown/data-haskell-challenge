@@ -26,9 +26,15 @@ import           Pipes                 hiding (Proxy)
 import qualified Pipes.Prelude         as P
 
 
+-- | = Types
 tableTypes "Prices"    "data/prices.csv"
 tableTypes "Purchases" "data/purchases.csv"
+type Merged = Record ( RecordColumns Prices
+                       ++ RDelete Item (RecordColumns Purchases) )
+type MoneySpent = "money-spent" :-> Int
 
+
+-- | = Read data
 pricesStream :: MonadSafe m => Producer Prices m ()
 pricesStream = readTableOpt pricesParser "data/prices.csv"
 
@@ -41,17 +47,20 @@ purchasesStream = readTableOpt purchasesParser "data/purchases.csv"
 loadPurchases :: IO (Frame Purchases)
 loadPurchases = inCoreAoS purchasesStream
 
--- Delete any purchase of legal fees.
+
+-- | = Process
+
+-- | Delete any purchase of legal fees.
 loadFilteredPurchase :: IO (Frame Purchases)
-loadFilteredPurchase = inCoreAoS $ purchasesStream >-> P.filter f
-  where f p = rget @Item p /= Field "legal fees (1 hour)"
+loadFilteredPurchase = inCoreAoS $ purchasesStream >-> x where
+  x :: Pipe Purchases Purchases (SafeT IO) r
+  x = P.filter f
+    where  f :: Purchases -> Bool
+           f p = rget @Item p /= Field "legal fees (1 hour)"
 
 -- Merge price and purchase data.
-joinPricePurchase :: IO (Frame (Record (
-  (RecordColumns Prices ++ RDelete Item (RecordColumns Purchases)))))
+joinPricePurchase :: IO (Frame Merged)
 joinPricePurchase = innerJoin @'[Item] <$> loadPrices <*> loadFilteredPurchase
-
-type MoneySpent = "money-spent" :-> Int
 
 zeroSpentColumn :: Int -> [Record '[MoneySpent]]
 zeroSpentColumn nrows = replicate nrows $ 0 &: RNil
