@@ -69,14 +69,14 @@ joinPricePurchaseIO = do pr <- inCoreAoS pricesStream
 joinPricePurchase :: Frame Prices -> Frame Purchases -> Frame Merged
 joinPricePurchase pr pu = innerJoin @'[Item] pr pu
 
-zeroSpentColumn :: Int -> [Record '[MoneySpent]]
-zeroSpentColumn nrows = replicate nrows $ 0 &: RNil
+zeroSpentColumns :: Int -> [Record '[MoneySpent]]
+zeroSpentColumns nrows = replicate nrows $ 0 &: RNil
 
 -- Compute a new column, "money-spent" = units-bought price.
 addNewColumn = do
   joined <- joinPricePurchaseIO
   let nrows = F.length joined
-      zipped = zipFrames joined $ toFrame $ zeroSpentColumn nrows
+      zipped = zipFrames joined $ toFrame $ zeroSpentColumns nrows
       f r = rput field r where
         field = Field @"money-spent"
                 $ mult (rget @UnitsBought r) (rget @Price r)
