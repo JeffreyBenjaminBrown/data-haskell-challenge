@@ -98,23 +98,22 @@ groupedByPerson fr = map f uniquePersons where
   persons = F.toList $ view person <$> fr
   uniquePersons = DL.nub persons
   f up = ( up
-         , filterFrame (\r -> (rget @Person r) == Field @"person" up) fr
-         )
+         , filterFrame (\r -> (rget @Person) r == Field @"person" up) fr )
+-- TODO ? WHy is this not equivalent?
+--         , filterFrame ((==) Field @"person" up . (rget @Person)) fr )
 
-printGroup = do
+printGroups = do
   g <- groupedByPersonIO
-  mapM_ (\(a, r) -> do print a;  (mapM_ print  r) ) g
+  mapM_ (\(a, r) -> do print a;  (mapM_ print  r); putStrLn "" ) g
 
 -- Within each group: Sort by date in increasing order.
-sortedGroups = do
-  gs <- groupedByPersonIO
-  let gs' = map (\(a, rs) ->
-                    (
-                      a
-                    , DL.sortOn (\r -> unField $ rget @Date r) (F.toList rs)
-                    )
-                ) gs
-  return gs'
+sortGroupsByDateIO :: IO [( Text, [MergedAndSpent] )]
+sortGroupsByDateIO = map sortGroupsByDate <$> groupedByPersonIO
+
+sortGroupsByDate :: ( Text, Frame MergedAndSpent )
+                 -> ( Text, [MergedAndSpent]     )
+sortGroupsByDate (a, rs) = ( a, DL.sortOn f $ F.toList rs)
+  where f r = unField $ rget @Date r
 
 unField :: ElField '(s, t) -> t
 unField (Field x) = x
@@ -136,7 +135,7 @@ createColumnAccumulated rs =
 
 -- Compute a new column, "accumulated-spending" = running total of money spent.
 addNewColumnInGroups = do
-  sorteds <- sortedGroups
+  sorteds <- sortGroupsByDateIO
   let zipped' = map (\(a, rs) ->
                         (
                           a
