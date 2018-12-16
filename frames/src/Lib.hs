@@ -3,13 +3,14 @@
 -- and on Github here:
 -- https://github.com/gagandeepb/frames-explore/blob/master/src/Lib.hs
 
-{-# LANGUAGE DataKinds         #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE GADTs             #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE TemplateHaskell   #-}
-{-# LANGUAGE TypeApplications  #-}
-{-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE DataKinds           #-}
+{-# LANGUAGE FlexibleContexts    #-}
+{-# LANGUAGE GADTs               #-}
+{-# LANGUAGE OverloadedStrings   #-}
+{-# LANGUAGE TemplateHaskell     #-}
+{-# LANGUAGE TypeApplications    #-}
+{-# LANGUAGE TypeOperators       #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Lib where
 
@@ -32,6 +33,7 @@ tableTypes "Purchases" "data/purchases.csv"
 type Merged = Record ( RecordColumns Prices
                        ++ RDelete Item (RecordColumns Purchases) )
 type MoneySpent = "money-spent" :-> Int
+type MergedAndSpent = Record ( RecordColumns Merged ++ '[MoneySpent] )
 
 
 -- | = Read data
@@ -64,30 +66,31 @@ joinPricePurchaseIO :: IO (Frame Merged)
 joinPricePurchaseIO = do pr <- inCoreAoS pricesStream
                          pu <- inCoreAoS $ purchasesStream >-> dropLegalCosts
                          return $ joinPricePurchase pr pu
-  -- innerJoin @'[Item] <$> loadPrices <*> dropLegalCostsIO
 
 joinPricePurchase :: Frame Prices -> Frame Purchases -> Frame Merged
 joinPricePurchase pr pu = innerJoin @'[Item] pr pu
 
-zeroSpentColumns :: Int -> [Record '[MoneySpent]]
-zeroSpentColumns nrows = replicate nrows $ 0 &: RNil
+emptySpendingColumn :: Int -> [Record '[MoneySpent]]
+emptySpendingColumn nrows = replicate nrows $ 0 &: RNil
 
 -- Compute a new column, "money-spent" = units-bought price.
-addNewColumn = do
-  joined <- joinPricePurchaseIO
-  let nrows = F.length joined
-      zipped = zipFrames joined $ toFrame $ zeroSpentColumns nrows
-      f r = rput field r where
-        field = Field @"money-spent"
-                $ mult (rget @UnitsBought r) (rget @Price r)
-  return $ fmap f zipped
+addSpendingIO :: IO (Frame MergedAndSpent)
+addSpendingIO = addSpending <$> joinPricePurchaseIO
 
-mult :: Num t => ElField '(s1, t) -> ElField '(s2, t) -> t
-mult (Field x) (Field y) = (x*y)
+addSpending :: Frame Merged -> Frame MergedAndSpent
+addSpending fr = fmap f zipped where
+  nrows = F.length fr :: Int
+  zipped :: Frame MergedAndSpent
+  zipped = zipFrames fr $ toFrame $ emptySpendingColumn nrows
+  f :: MergedAndSpent -> MergedAndSpent
+  f r = rput field r where
+    mult :: Num t => ElField '(s1, t) -> ElField '(s2, t) -> t
+    mult (Field x) (Field y) = (x*y)
+    field = Field @"money-spent" $ mult (rget @UnitsBought r) (rget @Price r)
 
 -- Group by person.
 grouped = do
-  a <- addNewColumn
+  a <- addSpendingIO
   let persons = F.toList $ view person <$> a
   let uniquePersons = DL.nub persons
   return $
