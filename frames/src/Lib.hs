@@ -89,25 +89,25 @@ addSpending fr = fmap f zipped where
     field = Field @"money-spent" $ mult (rget @UnitsBought r) (rget @Price r)
 
 -- Group by person.
-grouped = do
-  a <- addSpendingIO
-  let persons = F.toList $ view person <$> a
-  let uniquePersons = DL.nub persons
-  return $
-    map (\up ->
-          (
-            up
-          , filterFrame (\r -> (rget @Person r) == Field @"person" up) a
-          )
-        ) uniquePersons
+groupedByPersonIO :: IO [(Text, Frame MergedAndSpent)]
+groupedByPersonIO = groupedByPerson <$> addSpendingIO
+
+groupedByPerson :: Frame MergedAndSpent -> [(Text, Frame MergedAndSpent)]
+groupedByPerson fr = map f uniquePersons where
+  persons :: [Text] -- TODO This should be Person, not Text
+  persons = F.toList $ view person <$> fr
+  uniquePersons = DL.nub persons
+  f up = ( up
+         , filterFrame (\r -> (rget @Person r) == Field @"person" up) fr
+         )
 
 printGroup = do
-  g <- grouped
+  g <- groupedByPersonIO
   mapM_ (\(a, r) -> do print a;  (mapM_ print  r) ) g
 
 -- Within each group: Sort by date in increasing order.
 sortedGroups = do
-  gs <- grouped
+  gs <- groupedByPersonIO
   let gs' = map (\(a, rs) ->
                     (
                       a
