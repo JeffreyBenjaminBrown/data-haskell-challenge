@@ -51,23 +51,30 @@ loadPurchases = inCoreAoS purchasesStream
 -- | = Process
 
 -- | Delete any purchase of legal fees.
-loadFilteredPurchase :: IO (Frame Purchases)
-loadFilteredPurchase = inCoreAoS $ purchasesStream >-> x where
-  x :: Pipe Purchases Purchases (SafeT IO) r
-  x = P.filter f
-    where  f :: Purchases -> Bool
-           f p = rget @Item p /= Field "legal fees (1 hour)"
+dropLegalCostsIO :: IO (Frame Purchases)
+dropLegalCostsIO = inCoreAoS $ purchasesStream >-> dropLegalCosts
+
+dropLegalCosts :: Pipe Purchases Purchases (SafeT IO) r
+dropLegalCosts = P.filter f
+  where  f :: Purchases -> Bool
+         f p = rget @Item p /= Field "legal fees (1 hour)"
 
 -- Merge price and purchase data.
-joinPricePurchase :: IO (Frame Merged)
-joinPricePurchase = innerJoin @'[Item] <$> loadPrices <*> loadFilteredPurchase
+joinPricePurchaseIO :: IO (Frame Merged)
+joinPricePurchaseIO = do pr <- inCoreAoS pricesStream
+                         pu <- inCoreAoS $ purchasesStream >-> dropLegalCosts
+                         return $ joinPricePurchase pr pu
+  -- innerJoin @'[Item] <$> loadPrices <*> dropLegalCostsIO
+
+joinPricePurchase :: Frame Prices -> Frame Purchases -> Frame Merged
+joinPricePurchase pr pu = innerJoin @'[Item] pr pu
 
 zeroSpentColumn :: Int -> [Record '[MoneySpent]]
 zeroSpentColumn nrows = replicate nrows $ 0 &: RNil
 
 -- Compute a new column, "money-spent" = units-bought price.
 addNewColumn = do
-  joined <- joinPricePurchase
+  joined <- joinPricePurchaseIO
   let nrows = F.length joined
       zipped = zipFrames joined $ toFrame $ zeroSpentColumn nrows
       f r = rput field r where
