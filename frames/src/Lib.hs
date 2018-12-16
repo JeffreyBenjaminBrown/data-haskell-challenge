@@ -32,9 +32,13 @@ tableTypes "Prices"    "data/prices.csv"
 tableTypes "Purchases" "data/purchases.csv"
 type Merged = Record ( RecordColumns Prices
                        ++ RDelete Item (RecordColumns Purchases) )
+
 type MoneySpent = "money-spent" :-> Int
 type MergedAndSpent = Record ( RecordColumns Merged ++ '[MoneySpent] )
 
+type AccumulatedSpending = "accumulated-spending" :-> Int
+type MergedAndAccum = Record ( RecordColumns MergedAndSpent
+                               ++ '[AccumulatedSpending] )
 
 -- | = Read data
 pricesStream :: MonadSafe m => Producer Prices m ()
@@ -118,35 +122,29 @@ sortGroupsByDate (a, rs) = ( a, DL.sortOn f $ F.toList rs)
 unField :: ElField '(s, t) -> t
 unField (Field x) = x
 
-type AccumulatedSpending = "accumulated-spending" :-> Int
-
 extractMoneySpent rs = map (\r -> unField (rget @MoneySpent r)) rs
 
-createColumnAccumulated rs =
-  toFrame (
-              map (\r ->
-                      Field @"accumulated-spending" r :& RNil)
-                  (
-                    DL.scanl1  -- this might be lazy like foldl; can be improved
-                      (+)
-                      (extractMoneySpent rs)
-                  )
-          )
+createColumnAccumulated rs = toFrame
+  ( map
+    (\r -> Field @"accumulated-spending" r :& RNil)
+    ( DL.scanl1  -- this might be lazy like foldl; can be improved
+      (+)
+      (extractMoneySpent rs)
+    )
+  )
 
 -- Compute a new column, "accumulated-spending" = running total of money spent.
-addNewColumnInGroups = do
-  sorteds <- sortGroupsByDateIO
-  let zipped' = map (\(a, rs) ->
-                        (
-                          a
-                        , zipFrames (toFrame rs) (createColumnAccumulated rs)
-                        )
-                    ) sorteds
-  return zipped'
+addNewColumnInGroupsIO :: IO [(Text, Frame MergedAndAccum)]
+addNewColumnInGroupsIO = map addNewColumnInGroups <$> sortGroupsByDateIO
+
+addNewColumnInGroups :: (Text, [MergedAndSpent])
+                     -> (Text, Frame MergedAndAccum)
+addNewColumnInGroups (a, rs) = (a, rs')
+  where rs' = zipFrames (toFrame rs) (createColumnAccumulated rs)
 
 -- Keep the last row with a date no greater than 6; drop all others.
 dropAccordingToDate = do
-  ns <- addNewColumnInGroups
+  ns <- addNewColumnInGroupsIO
   return $
     map (\(a, fr) ->
             (
