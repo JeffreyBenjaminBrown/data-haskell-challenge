@@ -124,6 +124,8 @@ unField (Field x) = x
 
 extractMoneySpent rs = map (\r -> unField (rget @MoneySpent r)) rs
 
+createColumnAccumulated :: [MergedAndSpent]
+                        -> Frame (Record '[AccumulatedSpending])
 createColumnAccumulated rs = toFrame
   ( map
     (\r -> Field @"accumulated-spending" r :& RNil)
@@ -140,26 +142,22 @@ addNewColumnInGroupsIO = map addNewColumnInGroups <$> sortGroupsByDateIO
 addNewColumnInGroups :: (Text, [MergedAndSpent])
                      -> (Text, Frame MergedAndAccum)
 addNewColumnInGroups (a, rs) = (a, rs')
-  where rs' = zipFrames (toFrame rs) (createColumnAccumulated rs)
+  where rs' :: Frame MergedAndAccum
+        rs' = zipFrames (toFrame rs) (createColumnAccumulated rs)
 
 -- Keep the last row with a date no greater than 6; drop all others.
-dropAccordingToDate = do
-  ns <- addNewColumnInGroupsIO
-  return $
-    map (\(a, fr) ->
-            (
-              a
-            , last . F.toList $
-                filterFrame (\r ->
-                              unField (rget @Date r) <= 6)
-                            fr
-            )
-        )
-      ns
+keepLastBeforeTime6IO :: IO [( Text, MergedAndAccum )]
+keepLastBeforeTime6IO = map keepLastBeforeTime6 <$> addNewColumnInGroupsIO
+
+keepLastBeforeTime6 :: (Text, Frame MergedAndAccum)
+                    -> (Text,       MergedAndAccum)
+keepLastBeforeTime6 (a, fr) = ( a
+            , last . F.toList $ filterFrame isEarly fr )
+  where isEarly r = unField (rget @Date r) <= 6
 
 -- Across groups, compute the mean of accumulated spending.
 meanAcrossGroups = do
-  dropped <- dropAccordingToDate
+  dropped <- keepLastBeforeTime6IO
   let temp = map (\(_, r) ->
                     (fromIntegral . unField) $ rget @AccumulatedSpending r)
                   dropped
